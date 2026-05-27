@@ -1,0 +1,43 @@
+name: Build macOS DMG (Intel & Apple Silicon)
+
+on:
+  workflow_dispatch: # 允许在 GitHub 网页手动点击触发
+
+jobs:
+  build-mac:
+    runs-on: macos-latest # 使用 GitHub 提供的 Mac 服务器
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        submodules: 'recursive' # 关键：自动拉取 GlobalHotKeys 子模块
+
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x' # 匹配项目的 .NET 10 预览版
+
+    - name: Install macOS Dependencies
+      run: |
+        brew install p7zip
+        brew install create-dmg
+
+    - name: Publish for Intel Mac (osx-x64)
+      run: |
+        dotnet publish v2rayN.Desktop/v2rayN.Desktop.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -o ./publish_osx_x64
+        chmod +x package-osx.sh
+        ./package-osx.sh macos-x64 ./publish_osx_x64 1.0.0
+
+    - name: Publish for M-Chip Mac (osx-arm64)
+      run: |
+        dotnet publish v2rayN.Desktop/v2rayN.Desktop.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o ./publish_osx_arm64
+        chmod +x package-osx.sh
+        ./package-osx.sh macos-arm64 ./publish_osx_arm64 1.0.0
+
+    - name: Upload DMG Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: v2rayN-macOS-DMGs
+        path: |
+          *.dmg
