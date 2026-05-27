@@ -14,11 +14,15 @@ wget -nv -O $FileName "https://github.com/2dust/v2rayN-core-bin/raw/refs/heads/m
 7z x $FileName -y
 
 # 2. 将核心组件复制到输出目录与程序放在一起
-cp -rf v2rayN-${Arch}/* "$OutputPath"
+cp -rf v2rayN-${Arch}/* "$OutputPath/"
 
 # 3. 创建 macOS 的 .app 包结构
 PackagePath="v2rayN-Package-${Arch}"
 mkdir -p "$PackagePath/v2rayN.app/Contents/Resources"
+# 【修复点】：显式创建 MacOS 文件夹，防止 cp 命令崩溃
+mkdir -p "$PackagePath/v2rayN.app/Contents/MacOS"
+
+# 将编译输出的所有内容复制进 MacOS 文件夹
 cp -rf "$OutputPath/"* "$PackagePath/v2rayN.app/Contents/MacOS/"
 
 # 4. 修复可执行文件名 (将 v2rayN.Desktop 重命名为 v2rayN 保持与 PList 一致)
@@ -27,8 +31,12 @@ if [ -f "$PackagePath/v2rayN.app/Contents/MacOS/v2rayN.Desktop" ]; then
 fi
 
 # 5. 配置图标和权限
-cp -f "$PackagePath/v2rayN.app/Contents/MacOS/v2rayN.icns" "$PackagePath/v2rayN.app/Contents/Resources/AppIcon.icns"
+if [ -f "$PackagePath/v2rayN.app/Contents/MacOS/v2rayN.icns" ]; then
+    cp -f "$PackagePath/v2rayN.app/Contents/MacOS/v2rayN.icns" "$PackagePath/v2rayN.app/Contents/Resources/AppIcon.icns"
+fi
 echo "When this file exists, app will not store configs under this folder" > "$PackagePath/v2rayN.app/Contents/MacOS/NotStoreConfigHere.txt"
+
+# 赋予主程序执行权限
 chmod +x "$PackagePath/v2rayN.app/Contents/MacOS/v2rayN"
 
 # 6. 生成 Info.plist 配置文件
