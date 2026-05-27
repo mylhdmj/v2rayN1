@@ -1,22 +1,22 @@
 name: Build macOS DMG (Intel & Apple Silicon)
 
 on:
-  workflow_dispatch: # 允许在 GitHub 网页手动点击触发
+  workflow_dispatch:
 
 jobs:
   build-mac:
-    runs-on: macos-latest # 使用 GitHub 提供的 Mac 服务器
+    runs-on: macos-latest
     
     steps:
     - name: Checkout Code
       uses: actions/checkout@v4
       with:
-        submodules: 'recursive' # 关键：自动拉取 GlobalHotKeys 子模块
+        submodules: 'recursive'
 
     - name: Setup .NET 10
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '10.0.x' # 匹配项目的 .NET 10 预览版
+        dotnet-version: '10.0.x'
 
     - name: Install macOS Dependencies
       run: |
@@ -25,13 +25,15 @@ jobs:
 
     - name: Publish for Intel Mac (osx-x64)
       run: |
-        dotnet publish v2rayN.Desktop/v2rayN.Desktop.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -o ./publish_osx_x64
+        # 修复了这里的 csproj 路径
+        dotnet publish v2rayN/v2rayN.Desktop/v2rayN.Desktop.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -o ./publish_osx_x64
         chmod +x package-osx.sh
         ./package-osx.sh macos-x64 ./publish_osx_x64 1.0.0
 
     - name: Publish for M-Chip Mac (osx-arm64)
       run: |
-        dotnet publish v2rayN.Desktop/v2rayN.Desktop.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o ./publish_osx_arm64
+        # 修复了这里的 csproj 路径
+        dotnet publish v2rayN/v2rayN.Desktop/v2rayN.Desktop.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o ./publish_osx_arm64
         chmod +x package-osx.sh
         ./package-osx.sh macos-arm64 ./publish_osx_arm64 1.0.0
 
